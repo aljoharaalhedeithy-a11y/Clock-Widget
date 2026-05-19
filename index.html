@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riyadh Time & Calendar Widget</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f1f1f;
+      --muted: #9b9b9b;
+      --soft: #fafafa;
+      --border: #eeeeee;
+      --red: #d94a45;
+      --shadow: rgba(0, 0, 0, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 390px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 24px 22px;
+      box-shadow: 0 10px 28px var(--shadow);
+    }
+
+    .time-section {
+      text-align: center;
+      padding-bottom: 22px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .time {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 48px;
+      font-weight: 200;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .seconds {
+      color: var(--muted);
+    }
+
+    .location {
+      margin-top: 10px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .month-year {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .today-label {
+      text-align: right;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      line-height: 1.6;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .today-label span {
+      display: block;
+      color: var(--red);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+    }
+
+    .weekdays,
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 7px;
+    }
+
+    .weekdays {
+      margin-bottom: 8px;
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .day {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .empty {
+      color: transparent;
+      pointer-events: none;
+    }
+
+    .weekend {
+      color: #b8b8b8;
+      background: var(--soft);
+    }
+
+    .today {
+      color: #ffffff;
+      background: var(--red);
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(217, 74, 69, 0.18);
+    }
+
+  </style>
+</head>
+<body>
+  <main class="widget" aria-label="Riyadh time and calendar widget">
+    <section class="time-section">
+      <div class="time" id="timeDisplay">--:--:<span class="seconds">--</span></div>
+      <div class="location">Riyadh, Saudi Arabia</div>
+    </section>
+
+    <section class="calendar-header">
+      <div class="month-year" id="monthYear"></div>
+      <div class="today-label">
+        Today
+        <span id="todayText"></span>
+      </div>
+    </section>
+
+    <section class="weekdays" aria-label="Week days">
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+    </section>
+
+    <section class="days" id="calendarDays" aria-label="Calendar days"></section>
+
+  </main>
+
+  <script>
+    const timeZone = "Asia/Riyadh";
+
+    function getRiyadhParts() {
+      const formatter = new Intl.DateTimeFormat("en-GB", {
+        timeZone,
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      });
+
+      const parts = formatter.formatToParts(new Date());
+      const get = type => parts.find(part => part.type === type).value;
+
+      return {
+        year: Number(get("year")),
+        month: Number(get("month")) - 1,
+        day: Number(get("day")),
+        weekday: get("weekday"),
+        hour: get("hour"),
+        minute: get("minute"),
+        second: get("second")
+      };
+    }
+
+    function renderTime() {
+      const { hour, minute, second } = getRiyadhParts();
+      document.getElementById("timeDisplay").innerHTML = `${hour}:${minute}:<span class="seconds">${second}</span>`;
+    }
+
+    function renderCalendar() {
+      const { year, month, day, weekday } = getRiyadhParts();
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+
+      const monthYear = document.getElementById("monthYear");
+      const todayText = document.getElementById("todayText");
+      const calendarDays = document.getElementById("calendarDays");
+
+      monthYear.textContent = `${monthNames[month]} ${year}`;
+      todayText.textContent = `${weekday} ${day}`;
+      calendarDays.innerHTML = "";
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "day empty";
+        calendarDays.appendChild(emptyCell);
+      }
+
+      for (let date = 1; date <= daysInMonth; date++) {
+        const cell = document.createElement("div");
+        const dayOfWeek = new Date(year, month, date).getDay();
+        const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+        const isToday = date === day;
+
+        cell.className = "day";
+        if (isWeekend) cell.classList.add("weekend");
+        if (isToday) cell.classList.add("today");
+        cell.textContent = date;
+        calendarDays.appendChild(cell);
+      }
+    }
+
+    function renderWidget() {
+      renderTime();
+      renderCalendar();
+    }
+
+    renderWidget();
+    setInterval(renderTime, 1000);
+    setInterval(renderCalendar, 60 * 1000);
+  </script>
+</body>
+</html>
